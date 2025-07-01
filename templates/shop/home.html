@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-5">
+                <h1 class="fw-bold fs-2 mb-0">Our Products</h1>
+            </div>
+        </div>
+    </div>
+    
+        <!-- Products Grid -->
+        <div class="col-lg-9">
+            <div class="row g-4">
+                {% for product in products %}
+                <div class="col-md-6 col-xl-4">
+                    <div class="card border-0 shadow-sm rounded-4 h-100 product-card-hover">
+                        <a href="{% url 'shop:product_detail' product.pk %}" class="text-decoration-none">
+                            <div class="position-relative">
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                                     class="card-img-top rounded-top-4" style="height: 220px; object-fit: cover;">
+                                {% if product.stock_quantity <= 0 %}
+                                <div class="position-absolute top-0 start-0 m-3">
+                                    <span class="badge bg-danger rounded-pill">Out of Stock</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-body p-4">
+                                <h5 class="card-title fw-semibold text-dark mb-2">{{ product.name }}</h5>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-bold text-primary fs-5">₹{{ product.price }}</span>
+                                    {% if product.stock_quantity > 0 %}
+                                    <small class="text-success fw-medium">
+                                        <i class="fas fa-check-circle me-1"></i>{{ product.stock_quantity }} in stock
+                                    </small>
+                                    {% else %}
+                                    <small class="text-danger fw-medium">
+                                        <i class="fas fa-times-circle me-1"></i>Out of stock
+                                    </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

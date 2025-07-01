@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="fw-bold fs-2 mb-4">Your Wishlist</h1>
+            {% if wishlist_items %}
+            <div class="row g-4">
+                {% for item in wishlist_items %}
+                <div class="col-lg-6">
+                    <div class="bg-white rounded-4 shadow-sm border p-4">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-4">
+                                <div class="position-relative" style="height: 140px; width: 100%;">
+                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" 
+                                         class="img-fluid rounded-3 position-absolute top-0 start-0 w-100 h-100" 
+                                         style="object-fit: cover;">
+                                </div>
+                            </div>
+                            <div class="col-8">
+                                <div class="mb-3">
+                                    <h5 class="fw-semibold mb-2">
+                                        <a href="{% url 'shop:product_detail' item.product.pk %}" 
+                                           class="text-decoration-none text-dark">
+                                            {{ item.product.name }}
+                                        </a>
+                                    </h5>
+                                    <p class="fw-bold text-primary fs-5 mb-2">₹{{ item.product.price }}</p>
+                                    {% if item.product.stock_quantity > 0 %}
+                                    <span class="badge bg-success rounded-pill">
+                                        <i class="fas fa-check-circle me-1"></i>In Stock
+                                    </span>
+                                    {% else %}
+                                    <span class="badge bg-danger rounded-pill">
+                                        <i class="fas fa-times-circle me-1"></i>Out of Stock
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'shop:remove_from_wishlist' item.pk %}" 
+                                       class="btn btn-outline-danger btn-sm rounded-pill flex-fill d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-trash me-1"></i>Remove
+                                    </a>
+                                    {% if item.product.stock_quantity > 0 %}
+                                    <a href="{% url 'shop:add_to_cart' item.product.pk %}" 
+                                       class="btn btn-primary btn-sm rounded-pill flex-fill d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-shopping-cart me-1"></i>Add to Cart
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="d-flex justify-content-center align-items-center" style="min-height:60vh;">
+                <div class="text-center w-100">
+                    <div class="mb-4 d-flex justify-content-center">
+                        <!-- Portrait SVG placeholder -->
+                        <svg width="72" height="96" viewBox="0 0 72 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="0" y="0" width="72" height="96" rx="8" fill="#f5f5f7"/>
+                            <path d="M36 48c-6.627 0-12-5.373-12-12s5.373-12 12-12 12 5.373 12 12-5.373 12-12 12zm0-22c-5.523 0-10 4.477-10 10s4.477 10 10 10 10-4.477 10-10-4.477-10-10-10zm0 15a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" fill="#b0b0b5"/>
+                            <path d="M22 70c0-7.732 6.268-14 14-14s14 6.268 14 14v8H22v-8zm2 6h24v-6c0-6.627-5.373-12-12-12s-12 5.373-12 12v6z" fill="#b0b0b5"/>
+                        </svg>
+                    </div>
+                    <h3 class="fw-semibold text-dark mb-2" style="font-size:1.6rem;">Your wishlist is empty</h3>
+                    <p class="text-muted mb-4" style="font-size:1.1rem;">Start adding products you love to your wishlist.</p>
+                    <a href="{% url 'shop:home' %}" class="btn btn-primary rounded-pill px-4 py-2 shadow-sm d-inline-flex align-items-center justify-content-center" style="font-weight:500;">
+                        Browse Products
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

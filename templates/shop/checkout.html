@@ -1,0 +1,624 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="display-6 fw-bold text-center mb-5">
+                <i class="fas fa-shopping-bag text-primary me-3"></i>Checkout
+            </h1>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages" style="position: fixed; top: 20px; left: 20px; width: 250px; z-index: 1050;">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-4 border-0" style="font-size: 0.85rem; padding: 0.5rem 1rem;">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if order %}
+    <div class="alert alert-success">
+        <h1>Order Confirmation</h1>
+        <p>Thank you for your order! We will contact you soon regarding your purchase.</p>
+        <p>Your order number is: <strong>#{{ order.id }}</strong></p>
+    </div>
+    {% else %}
+    <div class="row g-5">
+        <!-- Shipping Information -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 p-4">
+                    <h3 class="card-title fw-bold mb-0">
+                        <i class="fas fa-shipping-fast text-primary me-2"></i>Shipping Information
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" id="checkoutForm">
+                        {% csrf_token %}
+                        
+                        <!-- Personal Information -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-semibold mb-0 text-secondary">
+                                    <i class="fas fa-user me-2"></i>Personal Details
+                                </h5>
+                                {% if user.is_authenticated %}
+                                <button type="button" class="btn btn-outline-success btn-sm rounded-pill" id="fillFromProfile">
+                                    <i class="fas fa-user-check me-1"></i>Fill from Profile
+                                </button>
+                                {% endif %}
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="id_first_name" class="form-label fw-semibold">First Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="fas fa-user text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-0 bg-light" id="id_first_name" name="first_name" 
+                                               value="{% if user.is_authenticated %}{{ user.first_name }}{% endif %}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_last_name" class="form-label fw-semibold">Last Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="fas fa-user text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-0 bg-light" id="id_last_name" name="last_name" 
+                                               value="{% if user.is_authenticated %}{{ user.last_name }}{% endif %}" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="id_email" class="form-label fw-semibold">Email Address</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="fas fa-envelope text-muted"></i>
+                                        </span>
+                                        <input type="email" class="form-control border-0 bg-light" id="id_email" name="email" 
+                                               value="{% if user.is_authenticated %}{{ user.email }}{% endif %}" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="id_phone" class="form-label fw-semibold">Phone Number</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="fas fa-phone text-muted"></i>
+                                        </span>
+                                        <input type="tel" class="form-control border-0 bg-light" id="id_phone" name="phone" 
+                                               value="{% if user.is_authenticated and user.phone %}{{ user.phone }}{% endif %}" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Shipping Address -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="fw-semibold mb-0 text-secondary">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Shipping Address
+                                </h5>
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill me-2" id="getCurrentLocation">
+                                    <i class="fas fa-location-arrow me-1"></i>Use Current Location
+                                </button>
+                            </div>
+                            
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label for="id_address_line_1" class="form-label fw-semibold">Address Line 1</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="fas fa-home text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-0 bg-light" id="id_address_line_1" name="address_line_1" 
+                                               placeholder="Street address, P.O. Box, company name, c/o" 
+                                               value="{% if user.is_authenticated and user.address %}{{ user.address }}{% endif %}" required>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <label for="id_address_line_2" class="form-label fw-semibold">Address Line 2 (Optional)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="fas fa-building text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-0 bg-light" id="id_address_line_2" name="address_line_2" placeholder="Apartment, suite, unit, building, floor, etc.">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_city" class="form-label fw-semibold">City</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="fas fa-city text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-0 bg-light" id="id_city" name="city" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_state" class="form-label fw-semibold">State</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="fas fa-map text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-0 bg-light" id="id_state" name="state" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_postal_code" class="form-label fw-semibold">Postal Code</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="fas fa-mail-bulk text-muted"></i>
+                                        </span>
+                                        <input type="text" class="form-control border-0 bg-light" id="id_postal_code" name="postal_code" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="id_country" class="form-label fw-semibold">Country</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-0">
+                                            <i class="fas fa-globe text-muted"></i>
+                                        </span>
+                                        <select class="form-select border-0 bg-light" id="id_country" name="country" required>
+                                            <option value="">Select Country</option>
+                                            <option value="IN" {% if user.is_authenticated and user.country == 'IN' %}selected{% elif not user.is_authenticated %}selected{% endif %}>India</option>
+                                            <option value="US" {% if user.is_authenticated and user.country == 'US' %}selected{% endif %}>United States</option>
+                                            <option value="GB" {% if user.is_authenticated and user.country == 'GB' %}selected{% endif %}>United Kingdom</option>
+                                            <option value="CA" {% if user.is_authenticated and user.country == 'CA' %}selected{% endif %}>Canada</option>
+                                            <option value="AU" {% if user.is_authenticated and user.country == 'AU' %}selected{% endif %}>Australia</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Special Instructions -->
+                        <div class="mb-4">
+                            <h5 class="fw-semibold mb-3 text-secondary">
+                                <i class="fas fa-sticky-note me-2"></i>Special Instructions (Optional)
+                            </h5>
+                            <div class="form-floating">
+                                <textarea class="form-control bg-light border-0" id="id_special_instructions" name="special_instructions" style="height: 100px" placeholder="Any special delivery instructions..."></textarea>
+                                <label for="id_special_instructions">Any special delivery instructions...</label>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill py-3" id="placeOrderBtn">
+                                <i class="fas fa-credit-card me-2"></i>Place Order
+                                <div class="spinner-border spinner-border-sm ms-2 d-none" role="status" id="orderSpinner">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 6rem;">
+                <div class="card-header bg-primary text-white border-0 p-4 rounded-top-4">
+                    <h3 class="card-title fw-bold mb-0">
+                        <i class="fas fa-receipt me-2"></i>Order Summary
+                    </h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for item in cart_items %}
+                        <div class="list-group-item border-0 p-4">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1 pe-3">
+                                    <h6 class="fw-semibold mb-1">{{ item.product.name }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-cubes me-1"></i>Qty: {{ item.quantity }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="fw-bold text-primary">₹{{ item.product.price|floatformat:2 }}</span>
+                                    {% if item.quantity > 1 %}
+                                    <br><small class="text-muted">₹{{ item.product.price|floatformat:2 }} each</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="list-group-item border-0 p-4 text-center">
+                            <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                            <p class="text-muted mb-0">Your cart is empty</p>
+                        </div>
+                        {% endfor %}
+                        
+                        {% if cart_items %}
+                        <div class="list-group-item border-0 p-4 bg-light">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold fs-5">Total</span>
+                                <span class="fw-bold fs-4 text-primary">₹{{ total|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="card border-0 shadow-sm rounded-4 mt-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-semibold mb-3">
+                        <i class="fas fa-shield-alt text-success me-2"></i>Secure Checkout
+                    </h6>
+                    <div class="row g-3 text-center">
+                        <div class="col-4">
+                            <i class="fas fa-lock fa-2x text-success mb-2"></i>
+                            <small class="d-block text-muted">SSL Encrypted</small>
+                        </div>
+                        <div class="col-4">
+                            <i class="fas fa-shipping-fast fa-2x text-primary mb-2"></i>
+                            <small class="d-block text-muted">Fast Delivery</small>
+                        </div>
+                        <div class="col-4">
+                            <i class="fas fa-undo fa-2x text-warning mb-2"></i>
+                            <small class="d-block text-muted">Easy Returns</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Location Loading Modal -->
+    <div class="modal fade" id="locationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4">
+                <div class="modal-body text-center p-5">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 class="fw-semibold mb-2">Getting Your Location</h5>
+                    <p class="text-muted mb-0">Please allow location access to auto-fill your address</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const getCurrentLocationBtn = document.getElementById('getCurrentLocation');
+    const testLocationBtn = document.getElementById('testLocation');
+    const fillFromProfileBtn = document.getElementById('fillFromProfile');
+    const locationModal = new bootstrap.Modal(document.getElementById('locationModal'));
+    const placeOrderBtn = document.getElementById('placeOrderBtn');
+    const orderSpinner = document.getElementById('orderSpinner');
+    const checkoutForm = document.getElementById('checkoutForm');
+
+    // Get current location and auto-fill address
+    getCurrentLocationBtn.addEventListener('click', function() {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by this browser.');
+            return;
+        }
+
+        locationModal.show();
+        
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                
+                // Use Nominatim (OpenStreetMap) API to reverse geocode with more detailed parameters
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&addressdetails=1&extratags=1&namedetails=1&zoom=18`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        locationModal.hide();
+                        
+                        if (data && data.address) {
+                            const address = data.address;
+                            console.log('Address data received:', address); // Debug log
+                            
+                            // Auto-fill form fields with better field mapping
+                            const addressLine1 = [
+                                address.house_number,
+                                address.road || address.street,
+                                address.neighbourhood || address.suburb
+                            ].filter(Boolean).join(', ');
+                            
+                            if (addressLine1) {
+                                document.getElementById('id_address_line_1').value = addressLine1;
+                            }
+                            
+                            // Try multiple field options for city
+                            const city = address.city || 
+                                        address.town || 
+                                        address.village || 
+                                        address.municipality || 
+                                        address.county || '';
+                            if (city) {
+                                document.getElementById('id_city').value = city;
+                            }
+                            
+                            // Try multiple field options for state
+                            const state = address.state || 
+                                         address.state_district || 
+                                         address.region || '';
+                            if (state) {
+                                document.getElementById('id_state').value = state;
+                            }
+                            
+                            // Postal code
+                            if (address.postcode) {
+                                document.getElementById('id_postal_code').value = address.postcode;
+                            }
+                            
+                            // Set country code
+                            const countryCode = address.country_code ? address.country_code.toUpperCase() : '';
+                            const countrySelect = document.getElementById('id_country');
+                            if (countryCode && countrySelect.querySelector(`option[value="${countryCode}"]`)) {
+                                countrySelect.value = countryCode;
+                            }
+                            
+                            // If address_line_2 exists, try to fill it
+                            const addressLine2 = [
+                                address.hamlet,
+                                address.residential,
+                                address.building
+                            ].filter(Boolean).join(', ');
+                            
+                            if (addressLine2) {
+                                document.getElementById('id_address_line_2').value = addressLine2;
+                            }
+                            // Trigger visual validation for filled fields
+                            const filledFields = [
+                                'id_address_line_1', 'id_city', 'id_state', 'id_postal_code'
+                            ];
+                            filledFields.forEach(fieldId => {
+                                const field = document.getElementById(fieldId);
+                                if (field && field.value.trim() !== '') {
+                                    field.classList.remove('is-invalid');
+                                    field.classList.add('is-valid');
+                                }
+                            });
+                            
+                            // Show success message with filled details
+                            const filledCount = filledFields.filter(fieldId => {
+                                const field = document.getElementById(fieldId);
+                                return field && field.value.trim() !== '';
+                            }).length;
+                            
+                            showAlert('success', `Location detected! ${filledCount} address fields have been auto-filled.`);
+                        } else {
+                            console.log('No address data found in response:', data);
+                            showAlert('warning', 'Could not determine address from your location. Please fill manually.');
+                        }
+                    })
+                    .catch(error => {
+                        locationModal.hide();
+                        console.error('Nominatim API Error:', error);
+                        
+                        // Try alternative method with different API endpoint
+                        fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`)
+                            .then(response => response.json())
+                            .then(data => {
+                                console.log('Alternative API response:', data);
+                                if (data && data.locality) {
+                                    // Fill what we can from alternative API
+                                    if (data.locality) document.getElementById('id_city').value = data.locality;
+                                    if (data.principalSubdivision) document.getElementById('id_state').value = data.principalSubdivision;
+                                    if (data.postcode) document.getElementById('id_postal_code').value = data.postcode;
+                                    if (data.countryCode) {
+                                        const countrySelect = document.getElementById('id_country');
+                                        const option = countrySelect.querySelector(`option[value="${data.countryCode}"]`);
+                                        if (option) countrySelect.value = data.countryCode;
+                                    }
+                                    showAlert('info', 'Partial location data filled. Please complete the address manually.');
+                                } else {
+                                    showAlert('danger', 'Error getting address. Please fill manually.');
+                                }
+                            })
+                            .catch(altError => {
+                                console.error('Alternative API also failed:', altError);
+                                showAlert('danger', 'Error getting address. Please fill manually.');
+                            });
+                    });
+            },
+            function(error) {
+                locationModal.hide();
+                let message = 'Error getting location. ';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        message += 'Location access denied by user.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        message += 'Location information unavailable.';
+                        break;
+                    case error.TIMEOUT:
+                        message += 'Location request timed out.';
+                        break;
+                    default:
+                        message += 'Unknown error occurred.';
+                        break;
+                }
+                showAlert('danger', message);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000
+            }
+        );
+    });
+
+    // Test location button for debugging
+    if (testLocationBtn) {
+        testLocationBtn.addEventListener('click', function() {
+            // Use Chennai coordinates for testing
+            const testLat = 13.0827;
+            const testLon = 80.2707;
+            
+            locationModal.show();
+            
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${testLat}&lon=${testLon}&addressdetails=1&extratags=1&namedetails=1&zoom=18`)
+                .then(response => response.json())
+                .then(data => {
+                    locationModal.hide();
+                    console.log('Test location data:', data);
+                    
+                    if (data && data.address) {
+                        const address = data.address;
+                        
+                        // Fill test data
+                        document.getElementById('id_address_line_1').value = 'Test Address, Anna Nagar';
+                        document.getElementById('id_city').value = 'Chennai';
+                        document.getElementById('id_state').value = 'Tamil Nadu';
+                        document.getElementById('id_postal_code').value = '600040';
+                        document.getElementById('id_country').value = 'IN';
+                        
+                        showAlert('info', 'Test location data filled successfully!');
+                    } else {
+                        showAlert('warning', 'Test location API call failed.');
+                    }
+                })
+                .catch(error => {
+                    locationModal.hide();
+                    console.error('Test location error:', error);
+                    showAlert('danger', 'Test location failed.');
+                });
+        });
+    }
+
+    // Fill from profile functionality
+    if (fillFromProfileBtn) {
+        fillFromProfileBtn.addEventListener('click', function() {
+            // User data is already pre-filled in the template, but we can refresh it
+            // or add additional functionality here if needed
+            
+            // Check which fields are already filled
+            const fieldsToCheck = [
+                { id: 'id_first_name', label: 'First Name' },
+                { id: 'id_last_name', label: 'Last Name' },
+                { id: 'id_email', label: 'Email' },
+                { id: 'id_phone', label: 'Phone' },
+                { id: 'id_address_line_1', label: 'Address' }
+            ];
+            
+            let filledCount = 0;
+            fieldsToCheck.forEach(field => {
+                const element = document.getElementById(field.id);
+                if (element && element.value.trim() !== '') {
+                    element.classList.remove('is-invalid');
+                    element.classList.add('is-valid');
+                    filledCount++;
+                }
+            });
+            
+            if (filledCount > 0) {
+                showAlert('success', `Profile data loaded! ${filledCount} fields have been filled from your profile.`);
+            } else {
+                showAlert('info', 'Please update your profile first to use this feature.');
+            }
+        });
+    }
+
+    // Form submission handling
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', function(e) {
+            placeOrderBtn.disabled = true;
+            orderSpinner.classList.remove('d-none');
+            placeOrderBtn.innerHTML = '<i class="fas fa-credit-card me-2"></i>Processing Order... <div class="spinner-border spinner-border-sm ms-2" role="status"><span class="visually-hidden">Loading...</span></div>';
+        });
+    }
+
+    // Helper function to show alerts
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show rounded-4 border-0`;
+        alertDiv.style.cssText = 'font-size: 0.85rem; padding: 0.5rem 1rem;';
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const messagesContainer = document.querySelector('.messages');
+        if (messagesContainer) {
+            messagesContainer.appendChild(alertDiv);
+        } else {
+            const container = document.querySelector('.container');
+            const newMessagesContainer = document.createElement('div');
+            newMessagesContainer.className = 'messages';
+            newMessagesContainer.style.cssText = 'position: fixed; top: 20px; left: 20px; width: 250px; z-index: 1050;';
+            newMessagesContainer.appendChild(alertDiv);
+            container.insertBefore(newMessagesContainer, container.firstChild);
+        }
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+
+    // Auto-validate pre-filled fields on page load
+    window.addEventListener('load', function() {
+        const preFilledFields = document.querySelectorAll('input[value]:not([value=""]), select option[selected]');
+        preFilledFields.forEach(field => {
+            if (field.tagName === 'INPUT' && field.value.trim() !== '') {
+                field.classList.add('is-valid');
+            }
+        });
+        
+        // Show info if user data is pre-filled
+        const userDataFields = ['id_first_name', 'id_last_name', 'id_email'];
+        const preFilledUserData = userDataFields.filter(fieldId => {
+            const field = document.getElementById(fieldId);
+            return field && field.value.trim() !== '';
+        });
+        
+        if (preFilledUserData.length > 0) {
+            showAlert('info', `Welcome back! Your profile information has been pre-filled. You can update it if needed.`);
+        }
+    });
+
+    // Input validation and styling
+    const inputs = document.querySelectorAll('input[required], select[required]');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim() === '') {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    });
+
+    // Phone number formatting
+    const phoneInput = document.getElementById('id_phone');
+    phoneInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length >= 10) {
+            value = value.substring(0, 10);
+            if (value.startsWith('91')) {
+                value = value.substring(2);
+            }
+            e.target.value = value.replace(/(\d{5})(\d{5})/, '$1 $2');
+        }
+    });
+});
+</script>
+{% endblock %}

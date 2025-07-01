@@ -1,0 +1,80 @@
+{% extends 'customadmin/base.html' %}
+{% block content %}
+<div class="dashboard">
+    <h1>Admin Dashboard</h1>
+    <div class="stats">
+        <div class="stat-card">
+            <h3>Total Products</h3>
+            <p>{{ products.count }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Total Categories</h3>
+            <p>{{ categories.count }}</p>
+        </div>
+        <div class="stat-card">
+            <h3>Recent Orders</h3>
+            <p>{{ orders.count }}</p>
+        </div>
+    </div>
+    
+    <div class="recent-orders">
+        <h2>Recent Orders ({{ orders|length }} total)</h2>
+        {% if orders %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>#{{ order.id }}</td>
+                    <td>{{ order.first_name }} {{ order.last_name }}</td>
+                    <td>₹{{ order.total_amount }}</td>
+                    <td>{{ order.get_status_display }}</td>
+                    <td>{{ order.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <a href="{% url 'customadmin:order_detail' order.pk %}" class="btn-view">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-danger">No orders found in database!</p>
+        {% endif %}
+    </div>
+    
+    <div class="recent-products">
+        <h2>Recent Products</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>{{ product.name }}</td>
+                    <td>₹{{ product.price }}</td>
+                    <td>{{ product.stock_quantity }}</td>
+                    <td>
+                        <a href="{% url 'customadmin:product_update' product.pk %}" class="btn-view">View/Edit</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

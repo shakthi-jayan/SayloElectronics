@@ -1,0 +1,14 @@
+{% extends 'customadmin/base.html' %}
+{% block content %}
+<div class="confirm-delete">
+<h1>Confirm Deletion</h1>
+<p>Are you sure you want to delete "{{ product.name }}"?</p>
+<form method="post">
+{% csrf_token %}
+<div class="form-actions">
+<button type="submit" class="btn-delete">Yes, Delete</button>
+<a href="{% url 'customadmin:product_list' %}" class="btn-cancel">Cancel</a>
+</div>
+</form>
+</div>
+{% endblock %}
